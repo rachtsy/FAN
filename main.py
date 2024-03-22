@@ -299,6 +299,12 @@ parser.add_argument('--finetune', default='', type=str, metavar='PATH',
 parser.add_argument('--finetune_in22k', default='', type=str, metavar='PATH',
                     help='path to ImageNet22K pretrained checkpoint file (default: none)')
 
+# additional parameters
+parser.add_argument('--use_wandb', default=1, help='use wandb.')
+parser.add_argument('--project_name', default=None, type=str)
+parser.add_argument('--job_name', type=str, default=None,
+                help='job name for wandb.')
+
 def _parse_args():
     args_config, remaining = config_parser.parse_known_args()
     if args_config.config:
@@ -374,6 +380,13 @@ def main():
     elif args.apex_amp or args.native_amp:
         _logger.warning("Neither APEX or native Torch AMP is available, using float32. "
                         "Install NVIDA apex or upgrade to PyTorch 1.6")
+        
+    if args.use_wandb:
+        import wandb
+        use_wandb = True
+        wandb.init(project=args.project_name)
+        wandb.run.name = f"{os.uname()[1]}//{args.job_name}"
+        wandb.config.update(args)
 
     torch.manual_seed(args.seed + args.rank)
     np.random.seed(args.seed + args.rank)
@@ -627,6 +640,7 @@ def main():
                 epoch, model, loader_train, optimizer, train_loss_fn, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
                 amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema, mixup_fn=mixup_fn, optimizers=optimizers)
+            wandb.log({'train_loss':train_metrics['loss'],'epoch':epoch})
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                 if args.local_rank == 0:
@@ -634,6 +648,7 @@ def main():
                 distribute_bn(model, args.world_size, args.dist_bn == 'reduce')
 
             eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast)
+            wandb.log({'test_loss':eval_metrics['loss'],'test_top1':eval_metrics['top1'],'test_top5':eval_metrics['top5'],'epoch':epoch})
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
@@ -831,4 +846,5 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
 
 if __name__ == '__main__':
+    os.environ["WANDB_API_KEY"]="f9b91afe90c0f06aa89d2a428bd46dac42640bff"
     main()

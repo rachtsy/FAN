@@ -1,0 +1,356 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    python_version: 3.8.13
+    cli_version: 0.16.4
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1711114487.0
+    t:
+      1:
+      - 1
+      - 41
+      - 55
+      - 63
+      2:
+      - 1
+      - 41
+      - 55
+      - 63
+      3:
+      - 17
+      - 23
+      - 37
+      4: 3.8.13
+      5: 0.16.4
+      8:
+      - 5
+      13: linux-x86_64
+data_dir:
+  desc: null
+  value: /cm/archive/thoth/dataset/ImageNet/
+dataset:
+  desc: null
+  value: ''
+train_split:
+  desc: null
+  value: train
+val_split:
+  desc: null
+  value: validation
+model:
+  desc: null
+  value: fan_tiny_12_p16_224
+pretrained:
+  desc: null
+  value: false
+eval_first:
+  desc: null
+  value: false
+initial_checkpoint:
+  desc: null
+  value: ''
+resume:
+  desc: null
+  value: ''
+no_resume_opt:
+  desc: null
+  value: false
+num_classes:
+  desc: null
+  value: null
+gp:
+  desc: null
+  value: null
+img_size:
+  desc: null
+  value: 224
+input_size:
+  desc: null
+  value: null
+crop_pct:
+  desc: null
+  value: null
+mean:
+  desc: null
+  value: null
+std:
+  desc: null
+  value: null
+interpolation:
+  desc: null
+  value: ''
+batch_size:
+  desc: null
+  value: 128
+validation_batch_size_multiplier:
+  desc: null
+  value: 1
+opt:
+  desc: null
+  value: adamw
+opt_eps:
+  desc: null
+  value: null
+opt_betas:
+  desc: null
+  value: null
+momentum:
+  desc: null
+  value: 0.9
+weight_decay:
+  desc: null
+  value: 0.05
+clip_grad:
+  desc: null
+  value: null
+clip_mode:
+  desc: null
+  value: norm
+sched:
+  desc: null
+  value: cosine
+lr:
+  desc: null
+  value: 0.002
+lr_noise:
+  desc: null
+  value: null
+lr_noise_pct:
+  desc: null
+  value: 0.67
+lr_noise_std:
+  desc: null
+  value: 1.0
+lr_cycle_mul:
+  desc: null
+  value: 1.0
+lr_cycle_limit:
+  desc: null
+  value: 1
+warmup_lr:
+  desc: null
+  value: 1.0e-06
+min_lr:
+  desc: null
+  value: 1.0e-06
+epochs:
+  desc: null
+  value: 300
+start_epoch:
+  desc: null
+  value: null
+decay_epochs:
+  desc: null
+  value: 30
+warmup_epochs:
+  desc: null
+  value: 5
+cooldown_epochs:
+  desc: null
+  value: 10
+patience_epochs:
+  desc: null
+  value: 10
+decay_rate:
+  desc: null
+  value: 0.1
+no_aug:
+  desc: null
+  value: false
+scale:
+  desc: null
+  value:
+  - 0.08
+  - 1.0
+ratio:
+  desc: null
+  value:
+  - 0.75
+  - 1.3333333333333333
+hflip:
+  desc: null
+  value: 0.5
+vflip:
+  desc: null
+  value: 0.0
+color_jitter:
+  desc: null
+  value: 0.4
+aa:
+  desc: null
+  value: rand-m9-mstd0.5-inc1
+aug_splits:
+  desc: null
+  value: 0
+jsd:
+  desc: null
+  value: false
+reprob:
+  desc: null
+  value: 0.25
+remode:
+  desc: null
+  value: pixel
+recount:
+  desc: null
+  value: 1
+resplit:
+  desc: null
+  value: false
+mixup:
+  desc: null
+  value: 0.8
+cutmix:
+  desc: null
+  value: 1.0
+cutmix_minmax:
+  desc: null
+  value: null
+mixup_prob:
+  desc: null
+  value: 1.0
+mixup_switch_prob:
+  desc: null
+  value: 0.5
+mixup_mode:
+  desc: null
+  value: batch
+mixup_off_epoch:
+  desc: null
+  value: 0
+smoothing:
+  desc: null
+  value: 0.1
+train_interpolation:
+  desc: null
+  value: random
+drop:
+  desc: null
+  value: 0.0
+drop_connect:
+  desc: null
+  value: null
+drop_path:
+  desc: null
+  value: 0.0
+drop_block:
+  desc: null
+  value: null
+bn_tf:
+  desc: null
+  value: false
+bn_momentum:
+  desc: null
+  value: null
+bn_eps:
+  desc: null
+  value: null
+sync_bn:
+  desc: null
+  value: false
+dist_bn:
+  desc: null
+  value: ''
+split_bn:
+  desc: null
+  value: false
+model_ema:
+  desc: null
+  value: true
+model_ema_force_cpu:
+  desc: null
+  value: false
+model_ema_decay:
+  desc: null
+  value: 0.99992
+seed:
+  desc: null
+  value: 42
+log_interval:
+  desc: null
+  value: 50
+recovery_interval:
+  desc: null
+  value: 0
+checkpoint_hist:
+  desc: null
+  value: 10
+workers:
+  desc: null
+  value: 16
+save_images:
+  desc: null
+  value: false
+amp:
+  desc: null
+  value: true
+apex_amp:
+  desc: null
+  value: false
+native_amp:
+  desc: null
+  value: true
+channels_last:
+  desc: null
+  value: false
+pin_mem:
+  desc: null
+  value: false
+no_prefetcher:
+  desc: null
+  value: false
+output:
+  desc: null
+  value: /home/huyenvtk1/repos/fan/FAN/output/fan_tiny_12_p16_224/
+eval_metric:
+  desc: null
+  value: top1
+tta:
+  desc: null
+  value: 0
+local_rank:
+  desc: null
+  value: 2
+use_multi_epochs_loader:
+  desc: null
+  value: false
+torchscript:
+  desc: null
+  value: false
+backup:
+  desc: null
+  value: ''
+finetune:
+  desc: null
+  value: ''
+finetune_in22k:
+  desc: null
+  value: ''
+use_wandb:
+  desc: null
+  value: '1'
+project_name:
+  desc: null
+  value: FAN
+job_name:
+  desc: null
+  value: sym_baseline
+prefetcher:
+  desc: null
+  value: true
+distributed:
+  desc: null
+  value: true
+device:
+  desc: null
+  value: cuda:2
+world_size:
+  desc: null
+  value: 4
+rank:
+  desc: null
+  value: 2
