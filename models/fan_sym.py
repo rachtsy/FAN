@@ -408,7 +408,7 @@ class TokenMixing(nn.Module):
         # q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
         # import pdb;pdb.set_trace()
-        print("Symmetric")
+        # print("Symmetric")
         kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
 
         k, v = kv[0], kv[1]
