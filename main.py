@@ -4,21 +4,22 @@
 # To view a copy of this license, visit
 # https://github.com/NVlabs/FAN/blob/main/LICENSE
 
-""" ImageNet Training Script
+# """ ImageNet Training Script
 
-This is intended to be a lean and easily modifiable ImageNet training script that reproduces ImageNet
-training results with some of the latest networks and training techniques. It favours canonical PyTorch
-and standard Python style over trying to be able to 'do it all.' That said, it offers quite a few speed
-and training result improvements over the usual PyTorch example scripts. Repurpose as you see fit.
+# This is intended to be a lean and easily modifiable ImageNet training script that reproduces ImageNet
+# training results with some of the latest networks and training techniques. It favours canonical PyTorch
+# and standard Python style over trying to be able to 'do it all.' That said, it offers quite a few speed
+# and training result improvements over the usual PyTorch example scripts. Repurpose as you see fit.
 
-This script was started from an early version of the PyTorch ImageNet example
-(https://github.com/pytorch/examples/tree/master/imagenet)
+# This script was started from an early version of the PyTorch ImageNet example
+# (https://github.com/pytorch/examples/tree/master/imagenet)
 
-NVIDIA CUDA specific speedups adopted from NVIDIA Apex examples
-(https://github.com/NVIDIA/apex/tree/master/examples/imagenet)
+# NVIDIA CUDA specific speedups adopted from NVIDIA Apex examples
+# (https://github.com/NVIDIA/apex/tree/master/examples/imagenet)
 
-Hacked together by / Copyright 2020 Ross Wightman (https://github.com/rwightman)
-"""
+# Hacked together by / Copyright 2020 Ross Wightman (https://github.com/rwightman)
+# """
+print("start")
 import argparse
 import time
 import yaml
@@ -79,7 +80,7 @@ parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 
 # Dataset / Model parameters
-parser.add_argument('data_dir', metavar='DIR',
+parser.add_argument('--data_dir', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('--dataset', '-d', metavar='NAME', default='',
                     help='dataset type (default: ImageFolder/ImageTar if empty)')
@@ -342,6 +343,7 @@ def main():
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
+    args.local_rank = int(os.environ['LOCAL_RANK'])
     args.device = 'cuda:0'
     args.world_size = 1
     args.rank = 0  # global rank
