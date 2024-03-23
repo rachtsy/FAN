@@ -640,7 +640,8 @@ def main():
                 epoch, model, loader_train, optimizer, train_loss_fn, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
                 amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema, mixup_fn=mixup_fn, optimizers=optimizers)
-            wandb.log({'train_loss':train_metrics['loss'],'epoch':epoch})
+            if args.use_wandb:
+                wandb.log({'train_loss':train_metrics['loss'],'epoch':epoch})
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                 if args.local_rank == 0:
@@ -648,7 +649,8 @@ def main():
                 distribute_bn(model, args.world_size, args.dist_bn == 'reduce')
 
             eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast)
-            wandb.log({'test_loss':eval_metrics['loss'],'test_top1':eval_metrics['top1'],'test_top5':eval_metrics['top5'],'epoch':epoch})
+            if args.use_wandb:
+                wandb.log({'test_loss':eval_metrics['loss'],'test_top1':eval_metrics['top1'],'test_top5':eval_metrics['top5'],'epoch':epoch})
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
