@@ -300,7 +300,7 @@ parser.add_argument('--finetune_in22k', default='', type=str, metavar='PATH',
                     help='path to ImageNet22K pretrained checkpoint file (default: none)')
 
 # additional parameters
-parser.add_argument('--use_wandb', default=1, help='use wandb.')
+parser.add_argument('--use_wandb', default=0, help='use wandb.')
 parser.add_argument('--project_name', default=None, type=str)
 parser.add_argument('--job_name', type=str, default=None,
                 help='job name for wandb.')

@@ -1,0 +1,65 @@
+2024-03-23 17:25:32,942 INFO    StreamThr :270482 [internal.py:wandb_internal():86] W&B internal server running at pid: 270482, started at: 2024-03-23 17:25:32.940587
+2024-03-23 17:25:32,943 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: status
+2024-03-23 17:25:32,947 INFO    WriterThread:270482 [datastore.py:open_for_write():87] open: /lustre/scratch/client/vinai/users/trangpvh1/repo/FAN/scripts/fan_vit/wandb/run-20240323_172532-swzwy4f7/run-swzwy4f7.wandb
+2024-03-23 17:25:32,948 DEBUG   SenderThread:270482 [sender.py:send():378] send: header
+2024-03-23 17:25:32,986 DEBUG   SenderThread:270482 [sender.py:send():378] send: run
+2024-03-23 17:25:37,987 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:25:42,987 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:25:47,988 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:25:52,988 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:25:57,989 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:26:02,990 DEBUG   HandlerThread:270482 [handler.py:handle_request():146] handle_request: keepalive
+2024-03-23 17:26:04,948 INFO    MainThread:270482 [internal.py:handle_exit():76] Internal process exited
+2024-03-23 17:26:05,850 INFO    SenderThread:270482 [retry.py:__call__():172] Retry attempt failed:
+Traceback (most recent call last):
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/urllib3/connectionpool.py", line 779, in urlopen
+    self._prepare_proxy(conn)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1048, in _prepare_proxy
+    conn.connect()
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/urllib3/connection.py", line 633, in connect
+    self._tunnel()  # type: ignore[attr-defined]
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/http/client.py", line 905, in _tunnel
+    raise OSError("Tunnel connection failed: %d %s" % (code,
+OSError: Tunnel connection failed: 403 VG-Blockpage
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', OSError('Tunnel connection failed: 403 VG-Blockpage'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/urllib3/connectionpool.py", line 847, in urlopen
+    retries = retries.increment(
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.wandb.ai', port=443): Max retries exceeded with url: /graphql (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 VG-Blockpage')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/wandb/sdk/lib/retry.py", line 131, in __call__
+    result = self._call_fn(*args, **kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/wandb/sdk/internal/internal_api.py", line 369, in execute
+    return self.client.execute(*args, **kwargs)  # type: ignore
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/wandb/vendor/gql-0.2.0/wandb_gql/client.py", line 52, in execute
+    result = self._get_result(document, *args, **kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/wandb/vendor/gql-0.2.0/wandb_gql/client.py", line 60, in _get_result
+    return self.transport.execute(document, *args, **kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/wandb/sdk/lib/gql_request.py", line 58, in execute
+    request = self.session.post(self.url, **post_args)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/trangpvh1/envs/anaconda3/envs/fan_new/lib/python3.8/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: HTTPSConnectionPool(host='api.wandb.ai', port=443): Max retries exceeded with url: /graphql (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 VG-Blockpage')))
+2024-03-23 17:26:05,978 WARNING StreamThr :270482 [internal.py:is_dead():414] Internal process exiting, parent pid 270400 disappeared
+2024-03-23 17:26:05,978 ERROR   StreamThr :270482 [internal.py:wandb_internal():152] Internal process shutdown.
+2024-03-23 17:26:05,989 INFO    WriterThread:270482 [datastore.py:close():296] close: /lustre/scratch/client/vinai/users/trangpvh1/repo/FAN/scripts/fan_vit/wandb/run-20240323_172532-swzwy4f7/run-swzwy4f7.wandb
+2024-03-23 17:26:05,990 INFO    HandlerThread:270482 [handler.py:finish():869] shutting down handler
