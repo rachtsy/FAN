@@ -11,16 +11,18 @@ from imagecorruptions import corrupt
 import random
 import os
 import mmcv
+from tqdm import tqdm
 
 
 random.seed(8) # for reproducibility
 np.random.seed(8)
 
 
-corruptions = ['gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
-                'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
-                'brightness', 'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression',
-                'speckle_noise', 'gaussian_blur', 'spatter', 'saturate']
+# corruptions = ['gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
+#                 'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
+#                 'brightness', 'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression',
+#                 'speckle_noise', 'gaussian_blur', 'spatter', 'saturate']
+corruptions = ['fog']
 
 def perturb(i, p, s):
     img = corrupt(i, corruption_name=p, severity=s)
@@ -33,7 +35,7 @@ def convert_img_path(ori_path, suffix):
     return new_path
 
 def main():
-    img_dir = '../ade20k_c/clean/'
+    img_dir = '/root/data/ADEChallengeData2016/images/validation_clean/'
     severity = [1, 2, 3, 4, 5]
     num_imgs = 5000
     for p in corruptions:

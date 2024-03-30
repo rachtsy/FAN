@@ -365,11 +365,13 @@ class ClassAttentionBlock(nn.Module):
 class TokenMixing(nn.Module):
     def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0., 
                     sr_ratio=1, linear=False, share_atten=False, drop_path=0., emlp=False, sharpen_attn=False,
-                    mlp_hidden_dim=None, act_layer=nn.GELU, drop=None, norm_layer=nn.LayerNorm):
+                    mlp_hidden_dim=None, act_layer=nn.GELU, drop=None, norm_layer=nn.LayerNorm, layer=0, robust=False):
         super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
+        self.layerth = layer
+        self.robust = robust
         self.num_heads = num_heads
         head_dim = dim // num_heads
         self.scale = qk_scale or head_dim ** -0.5
@@ -412,12 +414,48 @@ class TokenMixing(nn.Module):
         kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
 
         k, v = kv[0], kv[1]
-        attn = (k * self.scale @ k.transpose(-2, -1)) #* self.scale
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+
+        if self.robust and self.layerth==0:
+            l = torch.zeros((B,self.num_heads,N,C // self.num_heads)).to(torch.device("cuda"), non_blocking=True)
+            y = torch.zeros((B,self.num_heads,N,C // self.num_heads)).to(torch.device("cuda"), non_blocking=True)
+
+            lambd = 4
+            # print(lambd)
+            mu=N*C/4/k.norm(p=1,dim=[-1,-2],keepdim=True)
+
+            for i in range(0,3):
+                s = k-l+y/mu
+                # s = F.softshrink(input=s,lambd=mu.item())
+                s_less = s.le(-lambd*mu).int()
+                s_more = s.ge(lambd*mu).int()
+                s = (s-lambd*mu)*s_more + (s+lambd*mu)*s_less
+                k2 = k-s-y/mu
+                l = (k2 @ k2.transpose(-2, -1)) * self.scale
+                l = l.softmax(dim=-1)
+                l = l @ v
+                y = y+mu*(k-l-s)
+            
+            s = k-l+y/mu
+            # s = F.softshrink(input=s,lambd=mu.item())
+            s_less = s.le(-lambd*mu).int()
+            s_more = s.ge(lambd*mu).int()
+            s = (s-lambd*mu)*s_more + (s+lambd*mu)*s_less
+            k2 = k-s-y/mu
+            l = (k2 @ k2.transpose(-2, -1)) * self.scale
+            l = l.softmax(dim=-1)
+            attn = self.attn_drop(l)
+            x = attn @ v
+        
+        else:
+            attn = (k * self.scale @ k.transpose(-2, -1)) #* self.scale
+            attn = attn.softmax(dim=-1)
+            attn = self.attn_drop(attn)
+            x = (attn @ v)
+
+        x= x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
+
         return x, attn  @ v
 
 class HybridEmbed(nn.Module):
@@ -554,11 +592,13 @@ class FANBlock_SE(nn.Module):
         return x, H, W
 class FANBlock(nn.Module):
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, drop=0., attn_drop=0., sharpen_attn=False,
-                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, eta=1., sr_ratio=1., downsample=None, c_head_num=None):
+                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, eta=1., sr_ratio=1., downsample=None, c_head_num=None, layer=0, robust=False):
         super().__init__()
+        self.layerth = layer
+        self.robust = robust
         self.norm1 = norm_layer(dim)
         self.attn = TokenMixing(dim, num_heads=num_heads, qkv_bias=qkv_bias, mlp_hidden_dim=int(dim * mlp_ratio), sharpen_attn=sharpen_attn,
-                                    attn_drop=attn_drop, proj_drop=drop, drop=drop, drop_path=drop_path, sr_ratio=sr_ratio)
+                                    attn_drop=attn_drop, proj_drop=drop, drop=drop, drop_path=drop_path, sr_ratio=sr_ratio, robust=self.robust, layer=layer)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
 
@@ -643,10 +683,12 @@ class FAN(nn.Module):
 
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12, sharpen_attn=False, channel_dims=None,
                  num_heads=12, mlp_ratio=4., qkv_bias=True, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.,sr_ratio=None, backbone=None, use_checkpoint=False,
-                 act_layer=None, norm_layer=None,se_mlp=False, cls_attn_layers=2, use_pos_embed=True, eta=1., tokens_norm=False, c_head_num=None, hybrid_patch_size=2, head_init_scale=1.0):
+                 act_layer=None, norm_layer=None,se_mlp=False, cls_attn_layers=2, use_pos_embed=True, eta=1., tokens_norm=False, c_head_num=None, hybrid_patch_size=2, 
+                 head_init_scale=1.0, robust=False):
 
         super().__init__()
         img_size = to_2tuple(img_size)
+        self.robust = robust
         self.use_checkpoint = use_checkpoint
         assert (img_size[0] % patch_size == 0) and (img_size[0] % patch_size == 0), \
             '`patch_size` should divide image dimensions evenly'
@@ -687,7 +729,7 @@ class FAN(nn.Module):
                 build_block(
                     dim=channel_dims[i], num_heads=num_heads[i], mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, drop=drop_rate, sr_ratio=sr_ratio[i], 
                     attn_drop=attn_drop_rate, drop_path=drop_path_rate, act_layer=act_layer, norm_layer=norm_layer, eta=eta, 
-                    downsample=downsample, c_head_num=c_head_num[i] if c_head_num is not None else None))
+                    downsample=downsample, c_head_num=c_head_num[i] if c_head_num is not None else None, layer=i, robust=self.robust))
         self.num_features = self.embed_dim = channel_dims[i]
         self.cls_token = nn.Parameter(torch.zeros(1, 1, channel_dims[i]))
         self.cls_attn_blocks = nn.ModuleList([

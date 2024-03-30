@@ -21,6 +21,8 @@
 # """
 print("start")
 import argparse
+from pathlib import Path
+import json
 import time
 import yaml
 import os
@@ -40,6 +42,8 @@ import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
 from distutils.dir_util import copy_tree
+from cleverhans.torch.attacks.fast_gradient_method import fast_gradient_method
+from cleverhans.torch.attacks.projected_gradient_descent import projected_gradient_descent
 
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.models import create_model, resume_checkpoint, load_checkpoint, convert_splitbn_model, model_parameters
@@ -94,6 +98,8 @@ parser.add_argument('--pretrained', action='store_true', default=False,
                     help='Start with pretrained version of specified network (if avail)')
 parser.add_argument('--eval-first', action='store_true', default=False,
                     help='Start with pretrained version of specified network (if avail)')
+parser.add_argument('--eval', action='store_true', default=False,
+                    help='Only validation')
 parser.add_argument('--initial-checkpoint', default='', type=str, metavar='PATH',
                     help='Initialize model from this checkpoint (default: none)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -284,6 +290,8 @@ parser.add_argument('--use-multi-epochs-loader', action='store_true', default=Fa
                     help='use the multi-epochs-loader to save time at the beginning of every epoch')
 parser.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
+parser.add_argument('--log_name', default='', type=str,
+                    help='output log file name')
 
 
 
@@ -304,6 +312,10 @@ parser.add_argument('--use_wandb', default=0, help='use wandb.')
 parser.add_argument('--project_name', default=None, type=str)
 parser.add_argument('--job_name', type=str, default=None,
                 help='job name for wandb.')
+parser.add_argument('--attack', type=str, default='none',
+                help='type of attack')
+parser.add_argument('--robust', action='store_true', default=False,
+                    help='Run RPC')
 
 def _parse_args():
     args_config, remaining = config_parser.parse_known_args()
@@ -404,7 +416,8 @@ def main():
         bn_eps=args.bn_eps,
         scriptable=args.torchscript,
         checkpoint_path=args.initial_checkpoint,
-        img_size=args.img_size)
+        img_size=args.img_size,
+        robust=args.robust)
     if args.num_classes is None:
         assert hasattr(model, 'num_classes'), 'Model must have `num_classes` attr if not set on cmd line/config.'
         args.num_classes = model.num_classes  
@@ -630,7 +643,11 @@ def main():
                 f.write(args_text)
 
     try:
-        if args.finetune  or args.eval_first :
+        if args.eval:
+            eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast, attack=args.attack)
+            print(eval_metrics)
+            return
+        elif args.finetune  or args.eval_first :
             validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast)
         for epoch in range(start_epoch, num_epochs):
             if args.distributed and hasattr(loader_train.sampler, 'set_epoch'):
@@ -781,25 +798,30 @@ def train_one_epoch(
     return OrderedDict([('loss', losses_m.avg)])
 
 
-def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix=''):
+def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='', attack='none'):
     batch_time_m = AverageMeter()
     losses_m = AverageMeter()
     top1_m = AverageMeter()
     top5_m = AverageMeter()
+    log_path = Path("/root/checkpoints/")
 
     model.eval()
 
     end = time.time()
     last_idx = len(loader) - 1
-    with torch.no_grad():
-        for batch_idx, (input, target) in enumerate(loader):
-            last_batch = batch_idx == last_idx
-            if not args.prefetcher:
-                input = input.cuda()
-                target = target.cuda()
-            if args.channels_last:
-                input = input.contiguous(memory_format=torch.channels_last)
+    for batch_idx, (input, target) in enumerate(loader):
+        last_batch = batch_idx == last_idx
+        if not args.prefetcher:
+            input = input.cuda()
+            target = target.cuda()
+        if args.channels_last:
+            input = input.contiguous(memory_format=torch.channels_last)
+        if attack == 'fgm':
+            input = fast_gradient_method(model, input, 6/255, np.inf)
+        elif attack == 'pgd':
+            input = projected_gradient_descent(model, input, 6/255, 0.15 * 6/255, 20, np.inf)
 
+        with torch.no_grad():
             with amp_autocast():
                 output = model(input)
             if isinstance(output, (tuple, list)):
@@ -831,6 +853,11 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
             batch_time_m.update(time.time() - end)
             end = time.time()
+            with (log_path / f"{args.log_name}_log.txt").open("a") as f:
+                f.write(json.dumps({'Loss': losses_m.val,
+                    'Acc@1': top1_m.val, 
+                    'Acc@5': top5_m.val})+"\n")
+
             if args.local_rank == 0 and (last_batch or batch_idx % args.log_interval == 0):
                 log_name = 'Test' + log_suffix
                 _logger.info(
@@ -848,5 +875,5 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
 
 if __name__ == '__main__':
-    os.environ["WANDB_API_KEY"]="f9b91afe90c0f06aa89d2a428bd46dac42640bff"
+    # os.environ["WANDB_API_KEY"]="f9b91afe90c0f06aa89d2a428bd46dac42640bff"
     main()

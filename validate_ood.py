@@ -129,6 +129,8 @@ parser.add_argument('--imagenet_r', action='store_true', default=False,
                     help='replace labels from 1k to imagenet-r indices')
 parser.add_argument('--imagenet_c', action='store_true', default=False,
                     help='use corrupted dataset for evaluation')
+parser.add_argument('--robust', action='store_true', default=False,
+                    help='Run RPC')
 
 def validate(args):
     args.pretrained = args.pretrained or not args.checkpoint
@@ -161,7 +163,8 @@ def validate(args):
         in_chans=3,
         global_pool=args.gp,
         scriptable=args.torchscript,
-        img_size=args.img_size)
+        img_size=args.img_size,
+        robust=args.robust)
     if args.num_classes is None:
         assert hasattr(model, 'num_classes'), 'Model must have `num_classes` attr if not set on cmd line/config.'
         args.num_classes = model.num_classes
