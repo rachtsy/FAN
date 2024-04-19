@@ -9,9 +9,9 @@ from typing import Iterable, Optional
 from fvcore.nn import FlopCountAnalysis
 # import wandb
 import numpy as np
-# from autoattack import AutoAttack
-# from cleverhans.torch.attacks.fast_gradient_method import fast_gradient_method
-# from cleverhans.torch.attacks.projected_gradient_descent import projected_gradient_descent
+from autoattack import AutoAttack
+from cleverhans.torch.attacks.fast_gradient_method import fast_gradient_method
+from cleverhans.torch.attacks.projected_gradient_descent import projected_gradient_descent
 import torch.nn.functional as F
 
 import torch
@@ -22,85 +22,8 @@ from timm.utils import accuracy, ModelEma
 import utils
 import pdb
 
-# def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
-#                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-#                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
-#                     model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None,
-#                     set_training_mode=True,architecture=""):
-#     # put our model in training mode... so that drop out and batch normalisation does not affect it
-#     model.train(set_training_mode)
-#     metric_logger = utils.MetricLogger(delimiter="  ")
-#     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-#     header = 'Epoch: [{}]'.format(epoch)
-#     print_freq = 10
-
-#     # i = 0.
-#     for i, (samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
-#         try:
-#             samples = samples.to(device, non_blocking=True)
-#             targets = targets.to(device, non_blocking=True)
-#             # if i == 50:
-#             #     break
-#             if mixup_fn is not None:
-#                 samples, targets = mixup_fn(samples, targets)
-
-
-#             with torch.cuda.amp.autocast():
-#                 # flops = FlopCountAnalysis(model,samples)
-#                 # print(flops.total()/1e9)
-#                 # assert 1==2
-#                 outputs = model(samples)
-#                 loss = criterion(samples, outputs, targets)
-        
-#             # break
-
-
-#             # loss = loss +
-#             # loss is a tensor, averaged over the mini batch
-#             loss_value = loss.item()
-
-
-#             if not math.isfinite(loss_value):
-#                 print("Loss is {}, stopping training".format(loss_value))
-#                 sys.exit(1)
-
-
-#             optimizer.zero_grad()
-
-
-#             # this attribute is added by timm on one optimizer (adahessian)
-#             is_second_order = hasattr(optimizer, 'is_second_order') and optimizer.is_second_order
-#             # provides optimisation step for model
-#             loss_scaler(loss, optimizer, clip_grad=max_norm,
-#                         parameters=model.parameters(), create_graph=is_second_order)
-
-
-#             torch.cuda.synchronize()
-#             if model_ema is not None:
-#                 model_ema.update(model)
-
-
-#             metric_logger.update(loss=loss_value)
-#             metric_logger.update(lr=optimizer.param_groups[0]["lr"])
-#         except Exception as Argument:
-#             print("error")
-#             # creating/opening a file
-#             f = open("error.txt", "a")
-#             # writing in the file
-#             f.write(str(Argument))
-#             # closing the file
-#             f.close() 
-#     # gather the stats from all processes
-#     metric_logger.synchronize_between_processes()
-#     print("Averaged stats:", metric_logger)
-#     # for k, meter in metric_logger.meters.items():
-#     #     wandb.log({k: meter.global_avg, 'epoch':epoch})
-   
-#     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
-
-# evaluate on 1000 images in imagenet/val folder
 @torch.no_grad()
-def evaluate(data_loader, model, device, attn_only=False, batch_limit=0, attack='none', epoch=0):
+def evaluate(data_loader, model, device, attn_only=False, batch_limit=0, attack='none', eps=1/255, epoch=0):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -123,11 +46,10 @@ def evaluate(data_loader, model, device, attn_only=False, batch_limit=0, attack=
         bs = images.shape[0]
         if attack=='auto':
             images = adversary.run_standard_evaluation(images, target, bs=bs)
-            print(images.shape)
         elif attack == 'fgm':
-            images = fast_gradient_method(model, images, 6/255, np.inf)
+            images = fast_gradient_method(model, images, eps, np.inf)
         elif attack == 'pgd':
-            images = projected_gradient_descent(model, images, 6/255, 0.15 * 6/255, 20, np.inf)
+            images = projected_gradient_descent(model, images, eps, 0.15 * eps, 20, np.inf)
 
         with torch.cuda.amp.autocast():
             if attn_only:
