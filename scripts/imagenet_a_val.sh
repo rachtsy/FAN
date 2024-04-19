@@ -4,9 +4,6 @@
 # This work is made available under the Nvidia Source Code License-NC.
 # To view a copy of this license, visit
 # https://github.com/NVlabs/FAN/blob/main/LICENSE
-# --checkpoint /root/checkpoints/fan_tiny_baseline/train/20240323-204844-fan_tiny_12_p16_224-224/model_best.pth.tar \
-
-
 CUDA_VISIBLE_DEVICES=0 /root/FAN/validate_ood.py \
         /root/data/imagenet-a \
 	--model fan_tiny_12_p16_224 \
